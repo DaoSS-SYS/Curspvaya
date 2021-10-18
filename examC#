@@ -1,0 +1,391 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace Cursovaya
+{
+    public partial class ExamMain : Window
+    {
+        public void AnswersOn()
+        {
+            AnswerBlock.IsEnabled = true;
+            AnswerBox.IsEnabled = true;
+            AnswerBlock.Opacity = 100;
+            AnswerBox.Opacity = 100;
+        }
+        public void AnswersOff()
+        {
+            AnswerBlock.IsEnabled = false;
+            AnswerBox.IsEnabled = false;
+            AnswerBlock.Opacity = 0;
+            AnswerBox.Opacity = 0;
+        }
+        public void TestButtonsOn()
+        {
+            FirstAnswerButton.IsEnabled = true;
+            FirstAnswerButton.Opacity = 100;
+            SecondAnswerButton.IsEnabled = true;
+            SecondAnswerButton.Opacity = 100;
+            ThirdAnswerButton.IsEnabled = true;
+            ThirdAnswerButton.Opacity = 100;
+            FourdAnswerButton.IsEnabled = true;
+            FourdAnswerButton.Opacity = 100;
+        }
+        public void TestButtonsOffEn()
+        {
+            FirstAnswerButton.IsEnabled = false;
+            SecondAnswerButton.IsEnabled = false;
+            ThirdAnswerButton.IsEnabled = false;
+            FourdAnswerButton.IsEnabled = false;
+        }
+        public void TestButtonsOff()
+        {
+            FirstAnswerButton.IsEnabled = false;
+            SecondAnswerButton.IsEnabled = false;
+            ThirdAnswerButton.IsEnabled = false;
+            FourdAnswerButton.IsEnabled = false;
+            FirstAnswerButton.Opacity = 0;
+            SecondAnswerButton.Opacity = 0;
+            ThirdAnswerButton.Opacity = 0;
+            FourdAnswerButton.Opacity = 0;
+        }
+        public void SetColorDefault()
+        {
+            FirstAnswerButton.Background = new SolidColorBrush(Colors.LightGray);
+            SecondAnswerButton.Background = new SolidColorBrush(Colors.LightGray);
+            ThirdAnswerButton.Background = new SolidColorBrush(Colors.LightGray);
+            FourdAnswerButton.Background = new SolidColorBrush(Colors.LightGray);
+        }
+
+       
+        public ExamMain()
+        {
+            InitializeComponent();
+            DataContext = this;
+            AllQuests = Core.db.Questions2.ToList();
+        }
+
+        public int rightans = 0;
+
+        public int attempts = 0;
+
+        public int i = 0;
+
+        public int scores = 0;
+
+        public List<Questions2> AllQuests { get; set; }
+
+        private void NextButton_Click(object sender, RoutedEventArgs e)
+        {
+            rightans = 0;
+            var RightTextAnswer = Core.db.Questions2.AsNoTracking().FirstOrDefault(a => a.ID == i);
+
+            if(RightTextAnswer.IsItText == true)
+            {
+                if (RightTextAnswer.RightAnswer == AnswerBox.Text.ToLower()) scores += Convert.ToInt32(RightTextAnswer.Scores);
+            }
+
+            Scores.Text = scores.ToString();
+
+            SetColorDefault();
+           
+            i++;
+            var question = Core.db.Questions2.AsNoTracking().FirstOrDefault(a => a.ID == i);
+
+            attempts = Convert.ToInt32(question.CounterRightAnswers);
+
+            if (question.IsItText == true)
+            {
+                TestButtonsOff();
+                AnswersOn();
+                QuestLabel.Content = question.Quest;
+            }
+            else
+            {
+                TestButtonsOn();
+                AnswersOff();
+                using (var db = new CursovayaEntities1())
+                {
+
+                    var quest = db.Questions2.AsNoTracking().FirstOrDefault(q => q.ID == i);
+
+                    QuestLabel.Content = quest.Quest;
+                    
+                    FirstAnswerButton.Content = quest.Answer1;
+                    SecondAnswerButton.Content = quest.Answer2;
+                    ThirdAnswerButton.Content = quest.Answer3;
+                    FourdAnswerButton.Content = quest.Answer4;
+                }
+            }
+
+          
+        }
+        private void FirstAnswerButton_Click(object sender, RoutedEventArgs e)
+        {
+            attempts--;
+
+            using (var db = new CursovayaEntities1())
+            {
+                var answers = db.Questions2.AsNoTracking().FirstOrDefault(a => a.ID == i);
+
+                if (answers.IsFirstRight == 0)
+                {
+                    FirstAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                }
+                else
+                {
+                    FirstAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    rightans++;
+                    scores+= Convert.ToInt32(answers.Scores) / Convert.ToInt32(answers.CounterRightAnswers);
+                    Scores.Text = scores.ToString();
+                }
+
+                if (attempts == 0)
+                {
+                    if (answers.IsFirstRight == 0)
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsSecondRight == 0)
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsThirdRight == 0)
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsFourthRight == 0)
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    TestButtonsOffEn();
+                }
+            }
+
+           
+        }
+
+        private void SecondAnswerButton_Click(object sender, RoutedEventArgs e)
+        {
+            attempts--;
+
+            using (var db = new CursovayaEntities1())
+            {
+                var answers = db.Questions2.AsNoTracking().FirstOrDefault(a => a.ID == i);
+
+                if (answers.IsSecondRight == 0)
+                {
+                    SecondAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                }
+                else
+                {
+                    SecondAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    rightans++;
+                    scores += Convert.ToInt32(answers.Scores) / Convert.ToInt32(answers.CounterRightAnswers);
+                    Scores.Text = scores.ToString();
+                }
+                if (attempts == 0)
+                {
+                    if (answers.IsFirstRight == 0)
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsSecondRight == 0)
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsThirdRight == 0)
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsFourthRight == 0)
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    TestButtonsOffEn();
+                }
+            }
+        }
+
+        private void ThirdAnswerButton_Click(object sender, RoutedEventArgs e)
+        {
+            attempts--;
+
+            using (var db = new CursovayaEntities1())
+            {
+                var answers = db.Questions2.AsNoTracking().FirstOrDefault(a => a.ID == i);
+
+                if (answers.IsThirdRight == 0)
+                {
+                    ThirdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                }
+                else
+                {
+                    ThirdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    rightans++;
+                    scores += Convert.ToInt32(answers.Scores) / Convert.ToInt32(answers.CounterRightAnswers);
+                    Scores.Text = scores.ToString();
+                }
+                if (attempts == 0)
+                {
+                    if (answers.IsFirstRight == 0)
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsSecondRight == 0)
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsThirdRight == 0)
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsFourthRight == 0)
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    TestButtonsOffEn();
+                }
+            }
+        }
+
+        private void FourdAnswerButton_Click(object sender, RoutedEventArgs e)
+        {
+            attempts--;
+
+            using (var db = new CursovayaEntities1())
+            {
+                var answers = db.Questions2.AsNoTracking().FirstOrDefault(a => a.ID == i);
+
+                if (answers.IsFourthRight == 0)
+                {
+                    FourdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                }
+                else
+                {
+                    FourdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    rightans++;
+                    scores += Convert.ToInt32(answers.Scores) / Convert.ToInt32(answers.CounterRightAnswers);
+                    Scores.Text = scores.ToString();
+                }
+                if (attempts == 0)
+                {
+                    if (answers.IsFirstRight == 0)
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FirstAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsSecondRight == 0)
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        SecondAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsThirdRight == 0)
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        ThirdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    if (answers.IsFourthRight == 0)
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.Red);
+                    }
+                    else
+                    {
+                        FourdAnswerButton.Background = new SolidColorBrush(Colors.LightGreen);
+                    }
+                    TestButtonsOffEn();
+                }
+            }
+
+        }
+
+        private void StartButton_Click(object sender, RoutedEventArgs e)
+        {
+            
+            i++;
+            MainGrid.Children.Remove(StartButton);
+            TestButtonsOn();
+            NextButton.IsEnabled = true;
+
+
+            using (var db = new CursovayaEntities1())
+            {
+
+                var quest = db.Questions2.AsNoTracking().FirstOrDefault(q => q.ID == i);
+                attempts = Convert.ToInt32(quest.CounterRightAnswers);
+                QuestLabel.Content = quest.Quest;
+                FirstAnswerButton.Content = quest.Answer1;
+                SecondAnswerButton.Content = quest.Answer2;
+                ThirdAnswerButton.Content = quest.Answer3;
+                FourdAnswerButton.Content = quest.Answer4;
+            }
+        }
+    }
+}
